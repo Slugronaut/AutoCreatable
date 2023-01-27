@@ -5,8 +5,8 @@ Objects marked with the AutoCreate attribute can also pass a parameter to mark i
 
 Due to the demands of this serialization system Odin is currently required. However, I will likely add conditional compilation checks in the future to simply disable this feature if Odin is not present.
 
-Dependenices:
-  -[Odin](https://assetstore.unity.com/packages/tools/utilities/odin-inspector-and-serializer-89041)
+Dependenices:  
+  -[Odin](https://assetstore.unity.com/packages/tools/utilities/odin-inspector-and-serializer-89041)  
   -[com.postegames.typehelper](https://github.com/Slugronaut/Toolbox-TypeHelper)  
   -[com.postegames.unityextensions](https://github.com/Slugronaut/Toolbox-UnityExtensions)  
   -[com.postegames.collections](https://github.com/Slugronaut/Toolbox-Collections)  
