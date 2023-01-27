@@ -1,0 +1,21 @@
+{
+  "name": "com.postegames.autocreatable",
+  "version": "1.0.0",
+  "displayName": "PEGLIB - Auto Creatable",
+  "description": "Attribute and static class for automatically creating instances of types at application startup.",
+  "unity": "2022.2",
+  "keywords": [
+    "utility",
+    "library"
+  ],
+  "author": {
+    "name": "Sluggy",
+    "email": "jcsluggy@gmail.com",
+    "url": "http:/postegames.com"
+  },
+  "dependencies": {
+    "com.postegames.typehelper": "",
+    "com.postegames.unityextensions": "",
+    "com.postegames.collections": ""
+  }
+}
