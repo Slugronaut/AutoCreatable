@@ -1,3 +1,4 @@
+#define AUTOCREATOR_PREINITTYPES
 using Sirenix.Utilities;
 using System;
 using System.Collections.Generic;
@@ -116,21 +117,28 @@ namespace Toolbox.AutoCreate
                 }
             }
 
+#if AUTOCREATOR_PREINITTYPES
             var list = AutoCreatedObjects.ToList();
             //loop through all instantiated objects and invoke a magic 'AutoAwake()' method via reflection.
             //This is needed so that we have something that can be invoked after ALL autocreatables have been created.
             foreach (var obj in list)
             {
                 var type = obj.GetType();
-
-                Debug.Log($"Seeking AutoAwake for {type.Name}");
                 var method = type.GetMethod("AutoAwake", AutoInvokedMethodBindFlags);
-
-                if (method != null)
-                    Debug.Log($"Found Auto awake method for {type.Name}");
-
                 method?.Invoke(obj, null);
             }
+
+            //a second loop is needed so that if any autocreated types need to access *other* autocreated types
+            //during their startup, there is a way to ensure that all of them have had AutoAwake invoked already.
+            //Especially useful for singletons where we may be setting the Instance static value during AutoAwake
+            //but access it during startup in another autocreated type. welcome to the hell that is the singleton life :p
+            foreach (var obj in list)
+            {
+                var type = obj.GetType();
+                var method = type.GetMethod("AutoStart", AutoInvokedMethodBindFlags);
+                method?.Invoke(obj, null);
+            }
+#endif
         }
 
         /// <summary>
