@@ -2,6 +2,7 @@ using Sirenix.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace Toolbox.AutoCreate
@@ -14,6 +15,7 @@ namespace Toolbox.AutoCreate
     /// </summary>
     public static class AutoCreator
     {
+        static readonly public BindingFlags AutoInvokedMethodBindFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy | BindingFlags.Instance;
         static public readonly string SerialBytesExtension = ".bytes";
         static readonly string SerializedFilesPath = "Serialization/Singletons";
         static bool Initialized;
@@ -58,7 +60,7 @@ namespace Toolbox.AutoCreate
             foreach (var obj in list)
             {
                 var type = obj.GetType();
-                var method = type.GetMethod("AutoDestroy");
+                var method = type.GetMethod("AutoDestroy", AutoInvokedMethodBindFlags);
                 method?.Invoke(obj, null);
             }
             _AutoCreatables = new();
@@ -120,7 +122,13 @@ namespace Toolbox.AutoCreate
             foreach (var obj in list)
             {
                 var type = obj.GetType();
-                var method = type.GetMethod("AutoAwake");
+
+                Debug.Log($"Seeking AutoAwake for {type.Name}");
+                var method = type.GetMethod("AutoAwake", AutoInvokedMethodBindFlags);
+
+                if (method != null)
+                    Debug.Log($"Found Auto awake method for {type.Name}");
+
                 method?.Invoke(obj, null);
             }
         }
