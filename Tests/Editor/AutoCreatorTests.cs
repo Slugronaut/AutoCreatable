@@ -182,4 +182,172 @@ public class AutoCreatorTests
 
         AutoCreator.Reset();
     }
+
+
+    #region Testing AutoAwake and AutoStart
+    [AutoCreate]
+    public class MockAutoAwake
+    {
+        bool AwakeFlag;
+        public bool FlagWasSetInAwakeFirst;
+        public int AwakeCalls = 0;
+        public int StartCalls = 0;
+
+        void AutoAwake()
+        {
+            AwakeFlag = true;
+            AwakeCalls++;
+        }
+
+        void AutoStart()
+        {
+            FlagWasSetInAwakeFirst = AwakeFlag;
+            StartCalls++;
+        }
+    }
+
+
+    public interface IMockMultiAwake { }
+    [AutoCreate(CreationActions.None, typeof(IMockMultiAwake))]
+    public class MockMultiAwake : IMockMultiAwake
+    {
+        bool AwakeFlag;
+        public bool FlagWasSetInAwakeFirst;
+        public int AwakeCalls = 0;
+        public int StartCalls = 0;
+
+        void AutoAwake()
+        {
+            AwakeFlag = true;
+            AwakeCalls++;
+        }
+
+        void AutoStart()
+        {
+            FlagWasSetInAwakeFirst = AwakeFlag;
+            StartCalls++;
+        }
+    }
+
+
+    [AutoCreate]
+    public class MockAutoDestroy
+    {
+        public AutoCreatorTests InjectSource;
+
+        void AutoDestroy()
+        {
+            if(InjectSource != null)
+                InjectSource.DestroyCount++;
+        }
+    }
+
+    public interface IMockMultiDestroy { }
+    [AutoCreate(CreationActions.None, typeof(IMockMultiDestroy))]
+    public class MockMultiDestroy : IMockMultiDestroy
+    {
+        public AutoCreatorTests InjectSource;
+
+        void AutoDestroy()
+        {
+            if(InjectSource != null)
+                InjectSource.DestroyCount++;
+        }
+    }
+
+
+    [AutoResolve]
+    MockAutoAwake Awakable;
+
+    [AutoResolve]
+    MockMultiAwake MultiAwakable;
+
+    [AutoResolve]
+    MockAutoDestroy Destroyable;
+
+    [AutoResolve]
+    MockMultiDestroy MultiDestroyable;
+
+    int DestroyCount;
+
+
+
+    [Test]
+    public void InvokesAutoAwake()
+    {
+        AutoCreator.Initialize();
+        AutoCreator.Resolve(this);
+
+        Assert.AreEqual(1, Awakable.AwakeCalls);
+
+        AutoCreator.Reset();
+    }
+
+    [Test]
+    public void InvokesAutoStart()
+    {
+        AutoCreator.Initialize();
+        AutoCreator.Resolve(this);
+
+        Assert.AreEqual(1, Awakable.StartCalls);
+
+        AutoCreator.Reset();
+
+    }
+
+    [Test]
+    public void InvokesAwakeBeforeStart()
+    {
+        AutoCreator.Initialize();
+        AutoCreator.Resolve(this);
+
+        Assert.IsTrue(Awakable.FlagWasSetInAwakeFirst);
+
+        AutoCreator.Reset();
+    }
+
+    [Test]
+    public void AliasTypesDontInvokeAutoAwakeOrStartTwice()
+    {
+        AutoCreator.Initialize();
+        AutoCreator.Resolve(this);
+
+        Assert.AreEqual(1, MultiAwakable.AwakeCalls);
+        Assert.AreEqual(1, MultiAwakable.StartCalls);
+
+        AutoCreator.Reset();
+    }
+
+    [Test]
+    public void InvokesAutoDestroy()
+    {
+        DestroyCount = 0;
+        AutoCreator.Initialize();
+        AutoCreator.Resolve(this);
+
+        Assert.IsNotNull(Destroyable);
+        Assert.AreEqual(0, DestroyCount);
+        Destroyable.InjectSource = this;
+
+        AutoCreator.Reset();
+
+        Assert.AreEqual(1, DestroyCount);
+    }
+
+    [Test]
+    public void AliasTypesDontInvokeAutoDestroyTwice()
+    {
+        DestroyCount = 0;
+        AutoCreator.Initialize();
+        AutoCreator.Resolve(this);
+
+        Assert.IsNotNull(MultiDestroyable);
+        Assert.AreEqual(0, DestroyCount);
+        MultiDestroyable.InjectSource = this;
+
+        AutoCreator.Reset();
+
+        Assert.AreEqual(1, DestroyCount);
+    }
+    #endregion
 }

@@ -20,14 +20,14 @@ namespace Toolbox.AutoCreate
         static public readonly string SerialBytesExtension = ".bytes";
         static readonly string SerializedFilesPath = "Serialization/Singletons";
         static bool Initialized;
-        static public Dictionary<Type, object> _AutoCreatables;
+        static public Dictionary<Type, object> _AutoCreatedObjects;
         static public IEnumerable<object> AutoCreatedObjects
         {
             get
             {
-                if (_AutoCreatables == null)
+                if (_AutoCreatedObjects == null)
                     Initialize();
-                return _AutoCreatables.Values;
+                return _AutoCreatedObjects.Values;
             }
         }
 
@@ -42,11 +42,11 @@ namespace Toolbox.AutoCreate
             Initialized = true;
 
             Application.quitting += HandleAppExit;
-            _AutoCreatables = new();
+            _AutoCreatedObjects = new();
             foreach (var kvp in InstantiateAllAutoCreateables())
             {
-                if(!_AutoCreatables.TryAdd(kvp.Key, kvp.Value))
-                    throw new Exception($"The alias type '{kvp.Key.Name}' cannot be resolved to the concrete instance of '{kvp.Value.GetType().Name}' because it is already associated with and instance of '{_AutoCreatables[kvp.Key].GetType().Name}'.");
+                if(!_AutoCreatedObjects.TryAdd(kvp.Key, kvp.Value))
+                    throw new Exception($"The alias type '{kvp.Key.Name}' cannot be resolved to the concrete instance of '{kvp.Value.GetType().Name}' because it is already associated with and instance of '{_AutoCreatedObjects[kvp.Key].GetType().Name}'.");
                 
             }
         }
@@ -58,14 +58,26 @@ namespace Toolbox.AutoCreate
         {
             Application.quitting -= HandleAppExit;
             var list = AutoCreatedObjects.ToList();
-            foreach (var obj in list)
+            InvokeMethodOnAutoCreatables(list, "AutoDestroy");
+            _AutoCreatedObjects = new();
+            Initialized = false;
+        }
+
+        /// <summary>
+        /// Helper method for invoking a method on a given list of objects.
+        /// If the method is not found nothing happens. If an object in the
+        /// list is also in the Aliased list then it is skipped.
+        /// </summary>
+        /// <param name="list"></param>
+        public static void InvokeMethodOnAutoCreatables(List<object> list, string methodName)
+        {
+            foreach (var obj in list.Distinct())
             {
+                //skip aliased types or we'll invoke multiple times
                 var type = obj.GetType();
-                var method = type.GetMethod("AutoDestroy", AutoInvokedMethodBindFlags);
+                var method = type.GetMethod(methodName, AutoInvokedMethodBindFlags);
                 method?.Invoke(obj, null);
             }
-            _AutoCreatables = new();
-            Initialized = false;
         }
 
         /// <summary>
@@ -104,40 +116,37 @@ namespace Toolbox.AutoCreate
                     else inst = DeserializeSingleton(BuildAssetPath(type));
                     if (inst == null) continue;
 
+                    //Here we are generating aliases for each type based on what was passed into their AutoCreate attribute.
+                    //This allows us to autoresolve covarient types.
                     foreach(var subType in attr.ResolvableTypes)
                     {
-                        if(subType.IsInterface && TypeHelper.ImplementsInterface(type, subType))
-                            yield return new KeyValuePair<Type, object>(subType, inst);
-                        else if(TypeHelper.IsSameOrSubclass(subType, type))
-                            yield return new KeyValuePair<Type, object>(subType, inst);
+                        var kvp = new KeyValuePair<Type, object>(subType, inst);
+                        if (subType.IsInterface && TypeHelper.ImplementsInterface(type, subType))
+                            yield return kvp;
+                        else if (TypeHelper.IsSameOrSubclass(subType, type))
+                            yield return kvp;
                         else Debug.LogWarning($"The object of type '{type.Name}' cannot be auto-resolved to the type '{subType.Name}'.");
                     }
 
+                    //return this type itself after we've iterated over the alias types in the attribute
                     yield return new KeyValuePair<Type, object>(type, inst);
                 }
             }
 
 #if AUTOCREATOR_PREINITTYPES
-            var list = AutoCreatedObjects.ToList();
+            //TODO: We have a BIG bug here. Invokes can happen multiple times if a class is registered under several different types.
+
+            //var list = AutoCreatedObjects.ToList();
+            var list = _AutoCreatedObjects.ToList();
             //loop through all instantiated objects and invoke a magic 'AutoAwake()' method via reflection.
             //This is needed so that we have something that can be invoked after ALL autocreatables have been created.
-            foreach (var obj in list)
-            {
-                var type = obj.GetType();
-                var method = type.GetMethod("AutoAwake", AutoInvokedMethodBindFlags);
-                method?.Invoke(obj, null);
-            }
+            InvokeMethodOnAutoCreatables(list.Select(x => x.Value).ToList(), "AutoAwake");
 
             //a second loop is needed so that if any autocreated types need to access *other* autocreated types
             //during their startup, there is a way to ensure that all of them have had AutoAwake invoked already.
             //Especially useful for singletons where we may be setting the Instance static value during AutoAwake
             //but access it during startup in another autocreated type. welcome to the hell that is the singleton life :p
-            foreach (var obj in list)
-            {
-                var type = obj.GetType();
-                var method = type.GetMethod("AutoStart", AutoInvokedMethodBindFlags);
-                method?.Invoke(obj, null);
-            }
+            InvokeMethodOnAutoCreatables(list.Select(x => x.Value).ToList(), "AutoStart");
 #endif
         }
 
@@ -196,7 +205,7 @@ namespace Toolbox.AutoCreate
             {
                 if(field.CustomAttributes.Any(x => x.AttributeType == typeof(AutoResolveAttribute)))
                 {
-                    if (_AutoCreatables != null && _AutoCreatables.TryGetValue(field.FieldType, out object inst))
+                    if (_AutoCreatedObjects != null && _AutoCreatedObjects.TryGetValue(field.FieldType, out object inst))
                         field.SetValue(src, inst);
                     else Debug.LogWarning($"Could not autoresolve the field '{field.DeclaringType.Name}.{field.Name}' of the type '{field.FieldType}'.");
                 }
@@ -209,7 +218,7 @@ namespace Toolbox.AutoCreate
         /// <param name="type"></param>
         public static object AsSingleton(Type type)
         {
-            _AutoCreatables.TryGetValue(type, out object inst);
+            _AutoCreatedObjects.TryGetValue(type, out object inst);
             return inst;
         }
 
@@ -219,7 +228,7 @@ namespace Toolbox.AutoCreate
         /// <param name="type"></param>
         public static T AsSingleton<T>()
         {
-            _AutoCreatables.TryGetValue(typeof(T), out object inst);
+            _AutoCreatedObjects.TryGetValue(typeof(T), out object inst);
             return (T)inst;
         }
 
