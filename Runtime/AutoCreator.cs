@@ -1,5 +1,5 @@
 #define AUTOCREATOR_PREINITTYPES
-using Sirenix.Utilities;
+using Sirenix.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -181,7 +181,7 @@ namespace Toolbox.AutoCreate
             if (refsAsset == null)
                 Debug.LogWarning($"Missing objects ref asset. UnityEngine. Objects will not be deserialized and linked properly while loading {assetPath}.");
 
-            var obj = Sirenix.Serialization.SerializationUtility.DeserializeValue<object>(bytesAsset.bytes, Sirenix.Serialization.DataFormat.Binary, refsAsset != null ? refsAsset.SerializedRefs : null);
+            var obj = SerializationUtility.DeserializeValue<object>(bytesAsset.bytes, DataFormat.Binary, refsAsset != null ? refsAsset.SerializedRefs : null);
             Resources.UnloadAsset(refsAsset);
             return obj;
         }
