@@ -4,12 +4,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Sirenix.OdinInspector.Editor;
-using Toolbox.AutoCreate;
+using Peg.AutoCreate;
 using System.Linq;
 using Sirenix.Utilities;
-using Toolbox.Collections;
+using Peg.Util;
 
-namespace Toolbox.ToolboxEditor
+namespace Peg.ToolboxEditor
 {
     /// <summary>
     /// Provides a way to set values for monobehviours that

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace Toolbox.AutoCreate
+namespace Peg.AutoCreate
 {
     /// <summary>
     /// At application startup, automatically scans all assemblies for types

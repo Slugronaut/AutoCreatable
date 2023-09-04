@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace Toolbox.AutoCreate
+namespace Peg.AutoCreate
 {
     /// <summary>
     /// Used as a means of serializing UnityEngine.Object references for singletons.

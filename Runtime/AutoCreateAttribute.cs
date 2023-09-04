@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 
 
-namespace Toolbox.AutoCreate
+namespace Peg.AutoCreate
 {
     /// <summary>
     /// Any class marked with this attribute will automatically have an instance created at application startup.

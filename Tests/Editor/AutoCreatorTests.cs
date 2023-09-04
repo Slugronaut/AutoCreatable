@@ -1,6 +1,6 @@
 using System.Linq;
 using NUnit.Framework;
-using Toolbox.AutoCreate;
+using Peg.AutoCreate;
 
 
 public class AutoCreatorTests

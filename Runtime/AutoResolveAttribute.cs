@@ -1,6 +1,6 @@
 using System;
 
-namespace Toolbox.AutoCreate
+namespace Peg.AutoCreate
 {
     /// <summary>
     /// Attach to any field that should attempt to resolve assingment via the AutoCreator.
