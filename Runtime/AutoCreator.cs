@@ -212,6 +212,24 @@ namespace Peg.AutoCreate
             }
         }
 
+        /*
+        /// <summary>
+        /// Resolves the value for a specific reference to a type.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="dest"></param>
+        /// <returns></returns>
+        public static T AsSingleton<T>() where T : class
+        {
+            var fieldType = typeof(T);
+            if (_AutoCreatedObjects != null && _AutoCreatedObjects.TryGetValue(fieldType, out object inst))
+                return inst as T;
+
+            Debug.LogWarning($"Could not autoresolve the field type '{fieldType.Name}' of the type.");
+            return null;
+        }
+        */
+
         /// <summary>
         /// Returns the singleton instance of a given autocreated type.
         /// </summary>
@@ -226,10 +244,21 @@ namespace Peg.AutoCreate
         /// Returns the singleton instance of a given autocreated type.
         /// </summary>
         /// <param name="type"></param>
-        public static T AsSingleton<T>()
+        public static T AsSingleton<T>() where T : class
         {
-            _AutoCreatedObjects.TryGetValue(typeof(T), out object inst);
-            return (T)inst;
+            if (!_AutoCreatedObjects.TryGetValue(typeof(T), out object inst))
+                return null;// throw new Exception($"Failed to find instance of the object of type '{typeof(T).Name}'.");
+            try
+            {
+                var output = inst as T;
+                if(output == null)
+                    throw new Exception($"Could not cast type {inst.GetType().Name} to {typeof(T).Name}.");
+                return output;
+            }
+            catch (InvalidCastException)
+            {
+                throw new Exception($"Could not cast type {inst.GetType().Name} to {typeof(T).Name}.");
+            }
         }
 
     }

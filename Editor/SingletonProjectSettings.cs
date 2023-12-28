@@ -7,7 +7,7 @@ using Sirenix.OdinInspector.Editor;
 using Peg.AutoCreate;
 using System.Linq;
 using Sirenix.Utilities;
-using Peg.Util;
+using Peg.Collections;
 
 namespace Peg.ToolboxEditor
 {
