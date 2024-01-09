@@ -75,20 +75,25 @@ namespace Peg.ToolboxEditor
         /// <summary>
         /// 
         /// </summary>
-        protected override void OnGUI()
+        protected override void OnImGUI()
+        {
+            base.OnImGUI();
+            ProcessUI();
+        }
+
+        void ProcessUI()
         {
             if (Application.isPlaying) this.Close();
             ScrollPos = EditorGUILayout.BeginScrollView(ScrollPos);
 
             GUILayout.Space(20);
-            foreach(var kvp in EditCache)
+            foreach (var kvp in EditCache)
             {
                 var type = kvp.Key;
                 var obj = kvp.Value;
-
                 if (FoldFlags.TryGetValue(type, out bool fold))
                 {
-                    if (LayoutHeader(type.Name))
+                    if (ClickableLayoutHeader(type.Name))
                     {
                         if (SingletonWindow != null)
                             SingletonWindow.Close();
@@ -115,15 +120,15 @@ namespace Peg.ToolboxEditor
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        bool LayoutHeader(string name)
+        bool ClickableLayoutHeader(string name)
         {
             var headerStyle = new GUIStyle(EditorStyles.toolbar);
             headerStyle.normal.textColor = Color.magenta;// Color.blue;
             headerStyle.alignment = TextAnchor.MiddleLeft;
             headerStyle.fontSize = 16;
             headerStyle.fixedHeight = 45;
-            return GUILayout.Button(name, headerStyle, GUILayout.ExpandWidth(true));
-
+            bool result = GUILayout.Button(name, headerStyle, GUILayout.ExpandWidth(true));
+            return result;
         }
 
         /// <summary>
