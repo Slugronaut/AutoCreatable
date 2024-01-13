@@ -86,28 +86,34 @@ public class AutoCreatorTests
     [Test]
     public void TypesWithAutoCreateAttributeFound()
     {
+        AutoCreator.Initialize();
         var autoCreateableTypes = AutoCreator.FindAllAutoCreatableTypes();
         Assert.IsNotNull(autoCreateableTypes);
         Assert.GreaterOrEqual(autoCreateableTypes.Length, 1);
         Assert.Contains(typeof(MockAutoCreationType), autoCreateableTypes);
+        AutoCreator.Reset();
     }
 
     [Test]
     public void AutoCreatablesInstantiated()
     {
+        AutoCreator.Initialize();
         var autoCreatables = AutoCreator.InstantiateAllAutoCreateables().Select(x => x.Value).ToList();
         Assert.IsNotNull(autoCreatables);
         Assert.GreaterOrEqual(autoCreatables.Count, 1);
         Assert.Contains(typeof(MockAutoCreationType), autoCreatables.Select(x => x.GetType()).ToList());
+        AutoCreator.Reset();
     }
 
     [Test]
     public void DoesntAutoCreateAbstractTypes()
     {
+        AutoCreator.Initialize();
         Assert.DoesNotThrow(() =>
         {
             var autoCreatables = AutoCreator.InstantiateAllAutoCreateables().ToList();
         });
+        AutoCreator.Reset();
     }
 
     /// <summary>
